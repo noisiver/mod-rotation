@@ -156,14 +156,10 @@ static uint32 CountEnemiesAround(Player* p, Unit* center, float radius)
     Acore::AnyUnfriendlyUnitInObjectRangeCheck check(center, p, radius);
     Searcher searcher(center, units, check);
 
-    // Cell::VisitObjects ne parcourt que le conteneur de grille (créatures) :
-    // on ajoute le conteneur monde pour compter aussi les joueurs hostiles.
-    CellCoord coord(Acore::ComputeCellCoord(center->GetPositionX(), center->GetPositionY()));
-    Cell cell(coord);
-    TypeContainerVisitor<Searcher, GridTypeMapContainer>  gridVisitor(searcher);
-    TypeContainerVisitor<Searcher, WorldTypeMapContainer> worldVisitor(searcher);
-    cell.Visit(coord, gridVisitor, *center->GetMap(), *center, radius);
-    cell.Visit(coord, worldVisitor, *center->GetMap(), *center, radius);
+    // Le conteneur de grille d'AzerothCore (AllMapGridStoredObjectTypes)
+    // contient Player en plus de Creature : les joueurs hostiles sont donc
+    // comptés eux aussi, sans parcours supplémentaire.
+    Cell::VisitObjects(center, searcher, radius);
 
     uint32 count = 0;
     for (Unit* u : units)
