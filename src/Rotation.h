@@ -21,6 +21,7 @@ namespace ModRotation
         bool   Announce          = false;
         std::string AnnounceMessage;
         uint32 AoeThreshold      = 2;
+        float  AoeRadius         = 10.0f;
         uint32 RageDumpThreshold = 50;
         uint32 EnergyDumpThreshold = 60;
         uint32 HealInjuredPct    = 85;
@@ -37,7 +38,7 @@ namespace ModRotation
         Unit*   target   = nullptr; // cible hostile valide (peut être nullptr)
         Unit*   friendly = nullptr; // cible amicale sélectionnée, sinon soi-même
         bool    inMelee  = false;
-        uint32  enemies  = 0;       // ennemis au corps à corps
+        uint32  enemies  = 0;       // ennemis en combat autour de la cible
         uint8   tree     = 0;       // arbre de talents dominant (0/1/2)
 
         bool Aoe() const { return enemies >= config.AoeThreshold; }

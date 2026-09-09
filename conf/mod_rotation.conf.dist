@@ -58,13 +58,26 @@ Rotation.Announce.Message = "One-button |cff4CFF00Rotation|r module active: plac
 
 #
 #    Rotation.AoE.Threshold
-#        Description: Number of enemies in melee range from which area
-#                     abilities (Whirlwind, Cleave, Consecration, Volley,
-#                     Blizzard, Death and Decay…) take priority.
+#        Description: Number of enemies in combat around your current target
+#                     from which area abilities (Whirlwind, Cleave,
+#                     Consecration, Volley, Blizzard, Death and Decay…) take
+#                     priority. Enemies are counted around the target, not
+#                     around you, so ranged specs and non-tank group members
+#                     get AoE too.
 #        Default: 2
 #
 
 Rotation.AoE.Threshold = 2
+
+#
+#    Rotation.AoE.Radius
+#        Description: Radius in yards, around the current target, used to
+#                     count those enemies. Roughly the reach of most WotLK
+#                     area spells; lower it for a more conservative module.
+#        Default: 10.0
+#
+
+Rotation.AoE.Radius = 10.0
 
 #
 #    Rotation.RageDump.Threshold

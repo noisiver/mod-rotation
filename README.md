@@ -48,8 +48,11 @@ recompiling.
 
 General rules: power costs (mana/rage/energy/runes), cooldowns, GCD and range
 are checked before every cast — if an ability is unavailable, the next one in
-the list is tried. "AoE" = at least `Rotation.AoE.Threshold` enemies in melee
-range (default: 2). Healers heal the **selected friendly target** (or
+the list is tried. "AoE" = at least `Rotation.AoE.Threshold` enemies in combat
+within `Rotation.AoE.Radius` yards **of your current target** (default: 2
+enemies within 10 yards) — counting around the target rather than around
+yourself is what makes AoE work for ranged specs and for non-tank group
+members. Healers heal the **selected friendly target** (or
 themselves) according to the `Rotation.Heal.*` thresholds, and deal light
 damage when nobody is injured.
 

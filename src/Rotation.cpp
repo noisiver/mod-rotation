@@ -5,10 +5,14 @@
 
 #include "Rotation.h"
 
+#include "Cell.h"
+#include "CellImpl.h"
 #include "Chat.h"
 #include "Config.h"
 #include "CreatureAI.h"
 #include "Duration.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
 #include "ObjectAccessor.h"
 #include "Pet.h"
 #include "ScriptMgr.h"
@@ -138,15 +142,40 @@ void EngageRanged(Ctx& c)
         c.me->CastSpell(c.target, 75, false);
 }
 
-static uint32 CountMeleeEnemies(Player* p, Unit* target)
+// Compte les ennemis en combat autour de la cible. C'est ce qui décide de
+// l'AoE pour toutes les spécialisations.
+//
+// Se baser sur getAttackers() (« qui me frappe ») serait faux : un distant
+// n'a personne à sa portée de mêlée, et en groupe seul le tank est attaqué —
+// l'AoE ne se déclenchait donc jamais pour les autres. Voir l'issue #2.
+static uint32 CountEnemiesAround(Player* p, Unit* center, float radius)
 {
-    uint32 count = 0;
-    for (Unit* attacker : p->getAttackers())
-        if (attacker && attacker->IsAlive() && p->IsWithinMeleeRange(attacker))
-            ++count;
+    typedef Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck> Searcher;
 
-    if (target && target->IsAlive() && p->IsWithinMeleeRange(target) && !p->getAttackers().count(target))
-        ++count;
+    std::list<Unit*> units;
+    Acore::AnyUnfriendlyUnitInObjectRangeCheck check(center, p, radius);
+    Searcher searcher(center, units, check);
+
+    // Cell::VisitObjects ne parcourt que le conteneur de grille (créatures) :
+    // on ajoute le conteneur monde pour compter aussi les joueurs hostiles.
+    CellCoord coord(Acore::ComputeCellCoord(center->GetPositionX(), center->GetPositionY()));
+    Cell cell(coord);
+    TypeContainerVisitor<Searcher, GridTypeMapContainer>  gridVisitor(searcher);
+    TypeContainerVisitor<Searcher, WorldTypeMapContainer> worldVisitor(searcher);
+    cell.Visit(coord, gridVisitor, *center->GetMap(), *center, radius);
+    cell.Visit(coord, worldVisitor, *center->GetMap(), *center, radius);
+
+    uint32 count = 0;
+    for (Unit* u : units)
+    {
+        // Hors combat : on ignore, pour ne pas déclencher une AoE au sol qui
+        // pullerait un groupe voisin resté paisible.
+        if (u != center && !u->IsInCombat())
+            continue;
+
+        if (p->IsValidAttackTarget(u))
+            ++count;
+    }
 
     return count;
 }
@@ -179,7 +208,7 @@ static void ExecuteRotation(Player* p)
     if (c.target)
     {
         c.inMelee = p->IsWithinMeleeRange(c.target);
-        c.enemies = CountMeleeEnemies(p, c.target);
+        c.enemies = CountEnemiesAround(p, c.target, config.AoeRadius);
     }
 
     c.tree = p->GetMostPointsTalentTree();
@@ -217,6 +246,7 @@ public:
         config.AnnounceMessage     = sConfigMgr->GetOption<std::string>("Rotation.Announce.Message",
             "One-button |cff4CFF00Rotation|r module active: place the Rotation spell from your spellbook on your action bar.");
         config.AoeThreshold        = sConfigMgr->GetOption<uint32>("Rotation.AoE.Threshold", 2);
+        config.AoeRadius           = sConfigMgr->GetOption<float>("Rotation.AoE.Radius", 10.0f);
         config.RageDumpThreshold   = sConfigMgr->GetOption<uint32>("Rotation.RageDump.Threshold", 50);
         config.EnergyDumpThreshold = sConfigMgr->GetOption<uint32>("Rotation.EnergyDump.Threshold", 60);
         config.HealInjuredPct      = sConfigMgr->GetOption<uint32>("Rotation.Heal.InjuredPct", 85);

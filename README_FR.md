@@ -48,7 +48,10 @@ Spell Editor de stoneharry…) et livrer le fichier dans un `patch-4.MPQ` /
 Conditions générales : les coûts (mana/rage/énergie/runes), recharges, GCD et
 portées sont vérifiés avant chaque cast — si une aptitude n'est pas disponible,
 la suivante de la liste est essayée. « AoE » = au moins `Rotation.AoE.Threshold`
-ennemis au corps à corps (défaut : 2). Les soigneurs soignent la **cible
+ennemis en combat dans un rayon de `Rotation.AoE.Radius` mètres **autour de la
+cible actuelle** (défaut : 2 ennemis dans 10 mètres) — compter autour de la
+cible plutôt qu'autour de soi est ce qui rend l'AoE fonctionnelle pour les
+distants et pour les membres du groupe qui ne tankent pas. Les soigneurs soignent la **cible
 amicale sélectionnée** (ou eux-mêmes) selon les seuils `Rotation.Heal.*`, et
 font des dégâts légers si personne n'est blessé.
 
